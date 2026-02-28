@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TripMate – AI Student Travel Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #ffc850;
+    --gold-dim: rgba(255,200,80,0.15);
+    --gold-glow: rgba(255,200,80,0.35);
+    --bg: #080c18;
+    --bg2: #0f1625;
+    --bg3: #141e32;
+    --text: #e2ddd4;
+    --muted: #8a95ad;
+    --border: rgba(255,200,80,0.18);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── BACKGROUND ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 50% at 20% 0%, rgba(255,160,30,0.07) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 80% 100%, rgba(100,60,200,0.05) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrap { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+
+  /* ── HEADER ── */
+  header {
+    text-align: center;
+    padding: 3.5rem 1rem 2.5rem;
+    position: relative;
+  }
+  .plane-icon {
+    font-size: 3rem;
+    display: block;
+    animation: float 3s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%,100% { transform: translateY(0) rotate(-5deg); }
+    50%      { transform: translateY(-12px) rotate(5deg); }
+  }
+  header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.4rem, 6vw, 4rem);
+    font-weight: 900;
+    color: var(--gold);
+    letter-spacing: -1.5px;
+    line-height: 1;
+    text-shadow: 0 0 60px var(--gold-glow);
+    margin: 0.4rem 0 0.6rem;
+  }
+  header p {
+    color: var(--muted);
+    font-size: 1rem;
+    font-weight: 300;
+    letter-spacing: 0.3px;
+  }
+  .badge {
+    display: inline-block;
+    background: var(--gold-dim);
+    border: 1px solid var(--border);
+    color: var(--gold);
+    border-radius: 50px;
+    padding: 4px 14px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin-top: 0.8rem;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2rem 2.2rem;
+    margin-bottom: 1.4rem;
+    transition: border-color 0.3s;
+  }
+  .card:hover { border-color: rgba(255,200,80,0.3); }
+
+  .card-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.05rem;
+    color: var(--gold);
+    margin-bottom: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .card-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+    margin-left: 0.5rem;
+  }
+
+  /* ── GRID ── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.2rem; }
+  @media(max-width: 640px) {
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  }
+
+  /* ── FORM ELEMENTS ── */
+  .field { display: flex; flex-direction: column; gap: 0.4rem; }
+  label {
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  input[type="date"],
+  select,
+  textarea {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    padding: 0.65rem 1rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%;
+    -webkit-appearance: none;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(255,200,80,0.12);
+  }
+  select option { background: #1a2340; }
+  textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
+
+  /* ── INTEREST CHECKBOXES ── */
+  .interests-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 0.6rem;
+    margin-top: 0.2rem;
+  }
+  .interest-chip {
+    position: relative;
+  }
+  .interest-chip input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  .interest-chip label {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.55rem 0.85rem;
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-weight: 400;
+    color: var(--muted);
+    text-transform: none;
+    letter-spacing: 0;
+    transition: all 0.2s;
+    user-select: none;
+  }
+  .interest-chip input:checked + label {
+    background: var(--gold-dim);
+    border-color: var(--gold);
+    color: var(--gold);
+    font-weight: 500;
+  }
+  .interest-chip label:hover {
+    border-color: rgba(255,200,80,0.4);
+    color: var(--text);
+  }
+
+  /* ── BUDGET DISPLAY ── */
+  #budgetDisplay {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    color: var(--gold);
+    text-align: center;
+    margin-bottom: 0.3rem;
+    text-shadow: 0 0 20px var(--gold-glow);
+  }
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    width: 100%;
+    padding: 0;
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
+    cursor: pointer;
+  }
+  input[type="range"]:focus { box-shadow: none; border: none; }
+  input[type="range"]::-webkit-slider-track {
+    background: var(--border);
+    height: 4px;
+    border-radius: 4px;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--gold);
+    margin-top: -8px;
+    box-shadow: 0 0 10px var(--gold-glow);
+  }
+  .budget-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-top: 0.4rem;
+  }
+
+  /* ── SUBMIT BUTTON ── */
+  .btn-wrap { margin-top: 1.5rem; }
+  button[type="submit"] {
+    width: 100%;
+    background: linear-gradient(135deg, #ffc850, #ff9500);
+    color: #070a12;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 700;
+    font-size: 1.05rem;
+    letter-spacing: 0.5px;
+    border: none;
+    border-radius: 50px;
+    padding: 1rem 2rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+  button[type="submit"]::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  button[type="submit"]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 35px rgba(255,180,30,0.45);
+  }
+  button[type="submit"]:hover::after { opacity: 1; }
+  button[type="submit"]:active { transform: translateY(0); }
+
+  /* ── OUTPUT ── */
+  #output {
+    display: none;
+    background: var(--bg2);
+    border: 1px solid rgba(255,200,80,0.25);
+    border-radius: 20px;
+    padding: 2rem 2.2rem;
+    margin-top: 2rem;
+    animation: fadeIn 0.5s ease;
+  }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:none; } }
+
+  .output-header {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    color: var(--gold);
+    margin-bottom: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .summary-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.5rem; }
+  .tag {
+    background: var(--gold-dim);
+    border: 1px solid var(--border);
+    color: var(--gold);
+    border-radius: 50px;
+    padding: 4px 14px;
+    font-size: 0.78rem;
+    font-weight: 500;
+  }
+  #itineraryContent {
+    color: #ccc5b8;
+    font-size: 0.93rem;
+    line-height: 1.85;
+    white-space: pre-wrap;
+  }
+  .resources {
+    background: rgba(255,200,80,0.04);
+    border-left: 3px solid var(--gold);
+    border-radius: 0 12px 12px 0;
+    padding: 1rem 1.3rem;
+    margin-top: 1.5rem;
+    font-size: 0.85rem;
+    color: var(--muted);
+    line-height: 1.9;
+  }
+  .resources a { color: var(--gold); text-decoration: none; }
+  .resources a:hover { text-decoration: underline; }
+
+  .loading {
+    text-align: center;
+    padding: 2.5rem;
+    color: var(--muted);
+    font-style: italic;
+  }
+  .loading span {
+    display: inline-block;
+    animation: dots 1.2s infinite;
+  }
+  @keyframes dots {
+    0%,60%,100% { opacity:0; transform:translateY(0); }
+    30%          { opacity:1; transform:translateY(-4px); }
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    text-align: center;
+    color: #3a4055;
+    font-size: 0.78rem;
+    padding: 2rem 0 1rem;
+    border-top: 1px solid rgba(255,255,255,0.04);
+    margin-top: 2rem;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HEADER -->
+  <header>
+    <span class="plane-icon">✈️</span>
+    <h1>TripMate</h1>
+    <p>AI-Powered Travel Planner — Built for Indian Students</p>
+    <span class="badge">⚡ Powered by GPT-4 &nbsp;|&nbsp; Budget-Smart &nbsp;|&nbsp; Student-First</span>
+  </header>
+
+  <!-- FORM -->
+  <form id="travelForm">
+
+    <!-- Journey Details -->
+    <div class="card">
+      <div class="card-title">🗺️ Journey Details</div>
+      <div class="grid-2" style="margin-bottom:1.2rem">
+        <div class="field">
+          <label>📍 Source Location</label>
+          <input type="text" id="source" placeholder="e.g. Chennai, Tamil Nadu" required>
+        </div>
+        <div class="field">
+          <label>🏁 Destination</label>
+          <input type="text" id="destination" placeholder="e.g. Goa" required>
+        </div>
+      </div>
+      <div class="grid-3">
+        <div class="field">
+          <label>🗓️ Travel Start Date</label>
+          <input type="date" id="travelDate" required>
+        </div>
+        <div class="field">
+          <label>🔙 Return Date</label>
+          <input type="date" id="returnDate" required>
+        </div>
+        <div class="field">
+          <label>🌙 Duration (Days)</label>
+          <input type="number" id="duration" value="3" min="1" max="30">
+        </div>
+      </div>
+    </div>
+
+    <!-- Budget -->
+    <div class="card">
+      <div class="card-title">💰 Total Budget (₹)</div>
+      <div id="budgetDisplay">₹15,000</div>
+      <input type="range" id="budget" min="2000" max="100000" step="500" value="15000"
+             oninput="updateBudget(this.value)">
+      <div class="budget-labels">
+        <span>₹2,000</span>
+        <span>₹25,000</span>
+        <span>₹50,000</span>
+        <span>₹1,00,000</span>
+      </div>
+      <p style="font-size:0.78rem;color:var(--muted);margin-top:0.8rem;text-align:center">
+        Includes transport (to &amp; fro), stay, food, and activities
+      </p>
+    </div>
+
+    <!-- Transport -->
+    <div class="card">
+      <div class="card-title">🚌 Mode of Transport</div>
+      <div class="field">
+        <label>Preferred Travel Mode</label>
+        <select id="transport">
+          <option value="Train (Recommended – Budget Friendly)">🚂 Train (Recommended – Budget Friendly)</option>
+          <option value="Bus (Economy)">🚌 Bus (Economy)</option>
+          <option value="Flight (Low-Cost Carriers)">✈️ Flight (Low-Cost Carriers)</option>
+          <option value="Road Trip / Self-Drive">🚗 Road Trip / Self-Drive</option>
+          <option value="Bike / Scooter">🛵 Bike / Scooter</option>
+          <option value="Mixed (Train + Local Transport)">🔀 Mixed (Train + Local Transport)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Interests -->
+    <div class="card">
+      <div class="card-title">🎯 Places &amp; Experiences</div>
+      <p style="font-size:0.82rem;color:var(--muted);margin-bottom:0.9rem">Select everything you'd like to explore</p>
+      <div class="interests-grid">
+        <div class="interest-chip"><input type="checkbox" id="i1" value="Beaches" checked><label for="i1">🏖️ Beaches</label></div>
+        <div class="interest-chip"><input type="checkbox" id="i2" value="Temples & Spiritual Sites"><label for="i2">⛪ Temples</label></div>
+        <div class="interest-chip"><input type="checkbox" id="i3" value="Street Food & Local Cuisine" checked><label for="i3">🍜 Street Food</label></div>
+        <div class="interest-chip"><input type="checkbox" id="i4" value="Museums & Heritage"><label for="i4">🏛️ Museums</label></div>
+        <div class="interest-chip"><input type="checkbox" id="i5" value="Trekking & Nature"><label for="i5">🏕️ Trekking</label></div>
+        <div class="interest-chip"><input type="checkbox" id="i6" value="Nightlife & Entertainment"><label for="i6">🎡 Nightlife</label></div>
+        <div class="interest-chip"><input type="checkbox" id="i7" value="Shopping & Markets"><label for="i7">🛍️ Shopping</label></div>
+        <div class="interest-chip"><input type="checkbox" id="i8" value="Photography Spots"><label for="i8">📸 Photography</label></div>
+        <div class="interest-chip"><input type="checkbox" id="i9" value="Adventure Sports"><label for="i9">🤿 Adventure Sports</label></div>
+        <div class="interest-chip"><input type="checkbox" id="i10" value="Cafés & Hangout Spots"><label for="i10">☕ Cafés</label></div>
+        <div class="interest-chip"><input type="checkbox" id="i11" value="Boat Rides & Cruises"><label for="i11">🚢 Boat Rides</label></div>
+        <div class="interest-chip"><input type="checkbox" id="i12" value="Scenic Viewpoints"><label for="i12">🏞️ Scenic Views</label></div>
+      </div>
+    </div>
+
+    <!-- Notes -->
+    <div class="card">
+      <div class="card-title">📝 Additional Notes</div>
+      <div class="field">
+        <label>Dietary preferences, group size, accessibility needs, etc.</label>
+        <textarea id="notes" placeholder="e.g. Vegetarian only, group of 4 friends, prefer hostels, first time traveller..."></textarea>
+      </div>
+    </div>
+
+    <div class="btn-wrap">
+      <button type="submit">🚀 Generate My Personalised Itinerary</button>
+    </div>
+  </form>
+
+  <!-- OUTPUT -->
+  <div id="output">
+    <div class="output-header">🗺️ Your Personalised Itinerary</div>
+    <div class="summary-tags" id="summaryTags"></div>
+    <div id="itineraryContent"></div>
+    <div class="resources" id="resources" style="display:none">
+      <strong>🔗 Useful Booking Resources:</strong><br>
+      🚂 Trains: <a href="https://www.irctc.co.in" target="_blank">IRCTC</a> &nbsp;|&nbsp;
+      <a href="https://www.confirmtkt.com" target="_blank">ConfirmTkt</a> &nbsp;|&nbsp;
+      <a href="https://www.railyatri.in" target="_blank">RailYatri</a><br>
+      🚌 Buses: <a href="https://www.redbus.in" target="_blank">RedBus</a> &nbsp;|&nbsp;
+      <a href="https://www.abhibus.com" target="_blank">AbhiBus</a><br>
+      🏨 Stays: <a href="https://www.zostel.com" target="_blank">Zostel</a> &nbsp;|&nbsp;
+      <a href="https://www.goibibo.com" target="_blank">Goibibo</a> &nbsp;|&nbsp;
+      <a href="https://www.oyorooms.com" target="_blank">OYO</a><br>
+      ✈️ Flights: <a href="https://www.skyscanner.co.in" target="_blank">Skyscanner</a> &nbsp;|&nbsp;
+      <a href="https://www.ixigo.com" target="_blank">ixigo</a><br>
+      🛵 Local: <a href="https://www.rapido.bike" target="_blank">Rapido</a> &nbsp;|&nbsp;
+      <a href="https://www.olacabs.com" target="_blank">Ola</a> &nbsp;|&nbsp; Uber
+    </div>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<footer>Made with ❤️ for Indian Students &nbsp;|&nbsp; TripMate AI Travel Planner &nbsp;|&nbsp; Inspired by GT Holidays, Zostel & Backpacker India</footer>
+
+<script>
+  // Set default dates
+  const today = new Date();
+  const d7 = new Date(today); d7.setDate(today.getDate() + 7);
+  const d10 = new Date(today); d10.setDate(today.getDate() + 10);
+  document.getElementById('travelDate').value = d7.toISOString().split('T')[0];
+  document.getElementById('returnDate').value = d10.toISOString().split('T')[0];
+
+  function updateBudget(val) {
+    const n = parseInt(val);
+    document.getElementById('budgetDisplay').textContent = '₹' + n.toLocaleString('en-IN');
+  }
+
+  function getInterests() {
+    return [...document.querySelectorAll('.interest-chip input:checked')].map(c => c.value);
+  }
+
+  function formatDate(str) {
+    const d = new Date(str);
+    return d.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+  }
+
+  document.getElementById('travelForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const source      = document.getElementById('source').value.trim();
+    const destination = document.getElementById('destination').value.trim();
+    const travelDate  = document.getElementById('travelDate').value;
+    const returnDate  = document.getElementById('returnDate').value;
+    const duration    = document.getElementById('duration').value;
+    const budget      = document.getElementById('budget').value;
+    const transport   = document.getElementById('transport').value;
+    const notes       = document.getElementById('notes').value.trim();
+    const interests   = getInterests();
+
+    if (!source || !destination) { alert('Please enter Source and Destination!'); return; }
+    if (new Date(returnDate) <= new Date(travelDate)) { alert('Return date must be after travel start date!'); return; }
+    if (interests.length === 0) { alert('Please select at least one interest!'); return; }
+
+    // Show output area with loading
+    const output = document.getElementById('output');
+    output.style.display = 'block';
+    output.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    document.getElementById('summaryTags').innerHTML = `
+      <span class="tag">📍 ${source} → ${destination}</span>
+      <span class="tag">🌙 ${duration} Days</span>
+      <span class="tag">💰 ₹${parseInt(budget).toLocaleString('en-IN')}</span>
+      <span class="tag">🗓️ ${formatDate(travelDate)} – ${formatDate(returnDate)}</span>
+    `;
+
+    document.getElementById('itineraryContent').innerHTML =
+      `<div class="loading">✨ Crafting your perfect itinerary<span style="animation-delay:0s">.</span><span style="animation-delay:0.2s">.</span><span style="animation-delay:0.4s">.</span></div>`;
+    document.getElementById('resources').style.display = 'none';
+
+    const prompt = `You are TripMate, an expert budget travel planner for Indian college students.
+
+A student wants to travel:
+- From: ${source}
+- To: ${destination}
+- Travel Date: ${formatDate(travelDate)}
+- Return Date: ${formatDate(returnDate)}
+- Duration: ${duration} days
+- Total Budget: ₹${parseInt(budget).toLocaleString('en-IN')} (this covers EVERYTHING – transport, stay, food, activities)
+- Transport Mode: ${transport}
+- Interests: ${interests.join(', ')}
+- Special Notes: ${notes || 'None'}
+
+Create a DETAILED, PRACTICAL, BUDGET-CONSCIOUS travel itinerary with:
+
+1. **💰 Budget Breakdown** – Itemized estimate for: transport (to & fro), accommodation, food, activities, misc. Total must fit within ₹${parseInt(budget).toLocaleString('en-IN')}.
+
+2. **🚂 Transport Tips** – Best trains/buses, apps (IRCTC, RedBus), approximate ticket cost, booking timing.
+
+3. **🏨 Where to Stay** – Budget hostel/guesthouse options (₹300–₹800/night), platforms to use.
+
+4. **📅 Day-by-Day Itinerary** – For each day: Morning / Afternoon / Evening activities, specific place names, entry fees, local food spots with prices (₹50–₹200), local transport tips.
+
+5. **🎓 Student Hacks** – Discounts, student ID benefits, free entry spots, free WiFi locations, safety tips.
+
+6. **🍛 Must-Eat Street Foods** – 5 local dishes with where to find them cheaply.
+
+7. **🎒 Packing Checklist** – Essentials for this destination and season.
+
+Be specific with Indian place names, ₹ prices, and genuine tips for college students aged 18–24. Friendly, enthusiastic tone.`;
+
+    try {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${window._apiKey || 'YOUR_OPENAI_API_KEY'}`
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o',
+          messages: [
+            { role: 'system', content: 'You are TripMate, an enthusiastic Indian student travel advisor. Give practical, budget-smart advice with real place names, real ₹ prices, and genuine tips. Tone: friendly expert traveler friend.' },
+            { role: 'user', content: prompt }
+          ],
+          max_tokens: 2500,
+          temperature: 0.8
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.error) throw new Error(data.error.message);
+
+      const text = data.choices[0].message.content;
+      document.getElementById('itineraryContent').textContent = text;
+      document.getElementById('resources').style.display = 'block';
+
+    } catch (err) {
+      document.getElementById('itineraryContent').innerHTML =
+        `<div style="color:#ff6b6b;padding:1rem;background:rgba(255,100,100,0.08);border-radius:10px;border:1px solid rgba(255,100,100,0.2)">
+          ⚠️ <strong>Error:</strong> ${err.message}<br><br>
+          <em>Note: For security, the API key should be set via the Streamlit backend (app.py). The HTML frontend calls the OpenAI API directly — please set your key in app.py and use Streamlit for production use.</em>
+        </div>`;
+    }
+  });
+</script>
+</body>
+</html>
