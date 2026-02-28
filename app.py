@@ -343,12 +343,13 @@ if submitted:
                 """, unsafe_allow_html=True)
 
                 # Download Button
-                st.download_button(
-                    label="📥 Download Itinerary as Text",
-                    data=itinerary,
-                    file_name=f"tripmate_{destination.lower().replace(' ','_')}_itinerary.txt",
-                    mime="text/plain"
-                )
+                if itinerary:
+                    st.download_button(
+                        label="📥 Download Itinerary as Text",
+                        data=itinerary,
+                        file_name=f"tripmate_{destination.lower().replace(' ','_')}_itinerary.txt",
+                        mime="text/plain"
+                    )
 
             except Exception as e:
                 st.error(f"❌ Error generating itinerary: {str(e)}\n\nPlease check your API key in the .env file.")
