@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from datetime import date, timedelta
 
 load_dotenv()
+
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 # ─── Page Config ────────────────────────────────────────────────────────────────
@@ -15,68 +16,47 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# ─── Custom CSS ─────────────────────────────────────────────────────────────────
+# ─── Custom CSS (Light Theme) ────────────────────────────────────────────────────
 st.markdown("""
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500&display=swap');
 
   html, body, [class*="css"] {
       font-family: 'DM Sans', sans-serif;
-      background: #0a0e1a;
       background: #f5f7fa;
+      color: #1a1a2e;
   }
-  .stApp { color: #1a1a2e; }
+  .stApp { background: #f5f7fa; }
 
   /* Hero Banner */
   .hero {
-      background: linear-gradient(135deg, #1a2340 0%, #0d1526 40%, #1a1030 100%);
-      border: 1px solid rgba(255,200,80,0.2);
-      background: #f5f7fa;
+      background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 60%, #1565c0 100%);
+      border-radius: 20px;
       padding: 3rem 2rem;
       text-align: center;
       margin-bottom: 2rem;
-      position: relative;
-      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(26,115,232,0.25);
   }
-  .hero::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: radial-gradient(ellipse at center, rgba(255,180,50,0.08) 0%, transparent 60%);
-      animation: pulse 4s ease-in-out infinite;
-  }
-  @keyframes pulse { 0%,100%{opacity:0.5} 50%{opacity:1} }
   .hero h1 {
       font-family: 'Playfair Display', serif;
       font-size: 3.5rem;
       font-weight: 900;
-      color: #ffc850;
+      color: #ffffff;
       margin: 0;
-      text-shadow: 0 0 40px rgba(255,200,80,0.4);
       letter-spacing: -1px;
   }
   .hero p {
-      color: #9ba8c0;
+      color: #cce0ff;
       font-size: 1.1rem;
       margin-top: 0.5rem;
   }
 
-  /* Form Card */
-  .form-card {
-      background: #111827;
-      border: 1px solid rgba(255,200,80,0.15);
-      border-radius: 16px;
-      padding: 2rem;
-      margin-bottom: 1.5rem;
-  }
+  /* Section Titles */
   .section-title {
       font-family: 'Playfair Display', serif;
-      font-size: 1.3rem;
-      color: #ffc850;
-      border-bottom: 1px solid rgba(255,200,80,0.2);
+      font-size: 1.2rem;
+      color: #1a73e8;
+      border-bottom: 2px solid #e8f0fe;
       padding-bottom: 0.5rem;
       margin-bottom: 1.2rem;
   }
@@ -87,23 +67,23 @@ st.markdown("""
   .stSelectbox > div > div,
   .stDateInput > div > div > input,
   .stMultiSelect > div > div {
-      background: #1a2340 !important;
-      border: 1px solid rgba(255,200,80,0.25) !important;
+      background: #ffffff !important;
+      border: 1.5px solid #d0d7e2 !important;
       border-radius: 10px !important;
-      color: #e8e0d0 !important;
+      color: #1a1a2e !important;
       font-family: 'DM Sans', sans-serif !important;
   }
   .stTextInput > div > div > input:focus,
   .stNumberInput > div > div > input:focus {
-      border-color: #ffc850 !important;
-      box-shadow: 0 0 0 2px rgba(255,200,80,0.15) !important;
+      border-color: #1a73e8 !important;
+      box-shadow: 0 0 0 3px rgba(26,115,232,0.12) !important;
   }
-  label { color: #9ba8c0 !important; font-size: 0.85rem !important; font-weight: 500 !important; }
+  label { color: #444f6b !important; font-size: 0.85rem !important; font-weight: 500 !important; }
 
   /* Button */
   .stButton > button {
-      background: linear-gradient(135deg, #ffc850, #ff9d00) !important;
-      color: #0a0e1a !important;
+      background: linear-gradient(135deg, #1a73e8, #0d47a1) !important;
+      color: #ffffff !important;
       font-family: 'DM Sans', sans-serif !important;
       font-weight: 700 !important;
       font-size: 1rem !important;
@@ -116,54 +96,66 @@ st.markdown("""
   }
   .stButton > button:hover {
       transform: translateY(-2px) !important;
-      box-shadow: 0 8px 25px rgba(255,200,80,0.4) !important;
+      box-shadow: 0 8px 25px rgba(26,115,232,0.4) !important;
   }
 
   /* Itinerary Output */
   .itinerary-box {
-      background: linear-gradient(135deg, #111827, #0d1526);
-      border: 1px solid rgba(255,200,80,0.3);
+      background: #ffffff;
+      border: 1.5px solid #d0d7e2;
       border-radius: 16px;
       padding: 2rem;
       margin-top: 1.5rem;
       line-height: 1.8;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.06);
   }
   .itinerary-box h3 {
       font-family: 'Playfair Display', serif;
-      color: #ffc850;
+      color: #1a73e8;
   }
 
   /* Tags */
   .tag {
       display: inline-block;
-      background: rgba(255,200,80,0.1);
-      border: 1px solid rgba(255,200,80,0.3);
-      color: #ffc850;
+      background: #e8f0fe;
+      border: 1px solid #bbd0f8;
+      color: #1a73e8;
       border-radius: 20px;
       padding: 3px 12px;
       font-size: 0.78rem;
       margin: 3px;
+      font-weight: 500;
   }
 
   /* Tips card */
   .tip-card {
-      background: rgba(255,200,80,0.05);
-      border-left: 3px solid #ffc850;
+      background: #f0f6ff;
+      border-left: 4px solid #1a73e8;
       border-radius: 0 10px 10px 0;
       padding: 1rem 1.2rem;
       margin-top: 1rem;
       font-size: 0.9rem;
-      color: #c5b89a;
+      color: #2c3e6b;
   }
+  .tip-card a { color: #1a73e8; }
 
   /* Divider */
-  hr { border-color: rgba(255,200,80,0.1) !important; }
+  hr { border-color: #e0e6f0 !important; }
 
   /* Spinner */
-  .stSpinner > div { border-top-color: #ffc850 !important; }
+  .stSpinner > div { border-top-color: #1a73e8 !important; }
 
-  /* Streamlit markdown in itinerary */
-  .itinerary-content { color: #d4cfc8; font-size: 0.95rem; }
+  /* Summary bar */
+  .summary-bar {
+      background: #e8f0fe;
+      border-radius: 12px;
+      border: 1px solid #bbd0f8;
+      padding: 0.8rem 1rem;
+      margin: 1rem 0;
+  }
+
+  /* Footer */
+  .footer { text-align:center; color: #8a95ad; font-size: 0.8rem; padding: 1rem; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -232,7 +224,6 @@ with st.form("travel_form"):
     extra_notes = st.text_area("📝 Anything specific? (Dietary preferences, accessibility needs, group size, etc.)",
                                placeholder="e.g. Vegetarian food only, group of 4 friends, prefer hostels over hotels...")
 
-    # Submit
     st.markdown("<br>", unsafe_allow_html=True)
     submitted = st.form_submit_button("🚀 Generate My Itinerary")
 
@@ -276,7 +267,6 @@ Create a DETAILED, PRACTICAL, and BUDGET-CONSCIOUS travel itinerary. Include:
 7. **Packing Checklist** – Essentials for this specific destination/season.
 
 Format the response clearly with emojis and section headers. Be specific with Indian place names, prices in ₹, and practical advice tailored for college students aged 18–24.
-Reference popular student travel communities like Zostel, Backpacker India, and similar resources.
 """
 
     response = client.chat.completions.create(
@@ -300,9 +290,8 @@ if submitted:
     elif not interests:
         st.warning("💡 Tip: Select at least one interest for a better itinerary!")
     else:
-        # Summary Tags
         st.markdown(f"""
-        <div style="margin: 1rem 0; padding: 1rem; background: rgba(255,200,80,0.05); border-radius: 12px; border: 1px solid rgba(255,200,80,0.15);">
+        <div class="summary-bar">
             <span class="tag">📍 {source} → {destination}</span>
             <span class="tag">🌙 {duration} Days</span>
             <span class="tag">💰 ₹{budget:,}</span>
@@ -317,33 +306,31 @@ if submitted:
                     interests, duration, travel_date, return_date, extra_notes
                 )
 
-                st.markdown('<div class="itinerary-box">', unsafe_allow_html=True)
-                st.markdown(f"### 🗺️ Your Personalised Itinerary: {source} → {destination}")
-                st.markdown(itinerary)
-                st.markdown('</div>', unsafe_allow_html=True)
-
-                # Useful Resources
-                st.markdown("""
-                <div class="tip-card">
-                <strong>🔗 Useful Booking Resources for Students:</strong><br>
-                • <strong>Trains:</strong> <a href="https://www.irctc.co.in" style="color:#ffc850">IRCTC</a> | 
-                  <a href="https://www.confirmtkt.com" style="color:#ffc850">ConfirmTkt</a> | 
-                  <a href="https://www.railyatri.in" style="color:#ffc850">RailYatri</a><br>
-                • <strong>Buses:</strong> <a href="https://www.redbus.in" style="color:#ffc850">RedBus</a> | 
-                  <a href="https://www.abhibus.com" style="color:#ffc850">AbhiBus</a><br>
-                • <strong>Stays:</strong> <a href="https://www.zostel.com" style="color:#ffc850">Zostel</a> | 
-                  <a href="https://www.goibibo.com" style="color:#ffc850">Goibibo</a> | 
-                  <a href="https://www.oyo.com" style="color:#ffc850">OYO</a><br>
-                • <strong>Flights:</strong> <a href="https://www.skyscanner.co.in" style="color:#ffc850">Skyscanner</a> | 
-                  <a href="https://www.ixigo.com" style="color:#ffc850">ixigo</a><br>
-                • <strong>Local Travel:</strong> 
-                  <a href="https://www.rapido.bike" style="color:#ffc850">Rapido</a> | 
-                  <a href="https://www.olacabs.com" style="color:#ffc850">Ola</a> | Uber
-                </div>
-                """, unsafe_allow_html=True)
-
-                # Download Button
                 if itinerary:
+                    st.markdown('<div class="itinerary-box">', unsafe_allow_html=True)
+                    st.markdown(f"### 🗺️ Your Personalised Itinerary: {source} → {destination}")
+                    st.markdown(itinerary)
+                    st.markdown('</div>', unsafe_allow_html=True)
+
+                    st.markdown("""
+                    <div class="tip-card">
+                    <strong>🔗 Useful Booking Resources for Students:</strong><br>
+                    • <strong>Trains:</strong> <a href="https://www.irctc.co.in">IRCTC</a> |
+                      <a href="https://www.confirmtkt.com">ConfirmTkt</a> |
+                      <a href="https://www.railyatri.in">RailYatri</a><br>
+                    • <strong>Buses:</strong> <a href="https://www.redbus.in">RedBus</a> |
+                      <a href="https://www.abhibus.com">AbhiBus</a><br>
+                    • <strong>Stays:</strong> <a href="https://www.zostel.com">Zostel</a> |
+                      <a href="https://www.goibibo.com">Goibibo</a> |
+                      <a href="https://www.oyo.com">OYO</a><br>
+                    • <strong>Flights:</strong> <a href="https://www.skyscanner.co.in">Skyscanner</a> |
+                      <a href="https://www.ixigo.com">ixigo</a><br>
+                    • <strong>Local Travel:</strong>
+                      <a href="https://www.rapido.bike">Rapido</a> |
+                      <a href="https://www.olacabs.com">Ola</a> | Uber
+                    </div>
+                    """, unsafe_allow_html=True)
+
                     st.download_button(
                         label="📥 Download Itinerary as Text",
                         data=itinerary,
@@ -357,7 +344,7 @@ if submitted:
 # ─── Footer ─────────────────────────────────────────────────────────────────────
 st.markdown("---")
 st.markdown("""
-<div style="text-align:center; color: #4a5568; font-size: 0.8rem; padding: 1rem;">
+<div class="footer">
   Made with ❤️ for Indian Students | TripMate AI Travel Planner<br>
   Inspired by GT Holidays, Zostel & Backpacker India
 </div>
